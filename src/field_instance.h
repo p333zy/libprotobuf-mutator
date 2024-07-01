@@ -190,6 +190,21 @@ class ConstFieldInstance {
     return descriptor_->message_type();
   }
 
+#if PROTOBUF_VERSION < 3019006
+  bool EnforceUtf8() const {
+    return descriptor_->type() == protobuf::FieldDescriptor::TYPE_STRING &&
+           descriptor()->file()->syntax() ==
+               protobuf::FileDescriptor::SYNTAX_PROTO3;
+  }
+
+  const protobuf::FieldDescriptor* descriptor() const { return descriptor_; }
+
+  std::string DebugString() const {
+    std::string s = descriptor_->DebugString();
+    if (is_repeated()) s += "[" + std::to_string(index_) + "]";
+    return s + " of\n" + message_->DebugString();
+  }
+#else
   bool EnforceUtf8() const { return descriptor_->requires_utf8_validation(); }
 
   const protobuf::FieldDescriptor* descriptor() const { return descriptor_; }
@@ -199,6 +214,7 @@ class ConstFieldInstance {
     if (is_repeated()) s += absl::StrCat("[", index_, "]");
     return s + " of\n" + absl::StrCat(*message_);
   }
+#endif
 
  protected:
   bool is_repeated() const { return descriptor_->is_repeated(); }
